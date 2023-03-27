@@ -1,0 +1,27 @@
+# Link of IRC_15000
+.format: 4
+
+.import:
+  Robotics: [Segment]
+  Components: [LinkBody]
+LinkSegment:
+  .extends: Segment
+
+  body: LinkBody
+
+  localInputDir:
+    .type: Vec3
+    .value: Vec3(0,0,1)
+  localOutputDir:
+    .type: Vec3
+    .value: Vec3(0,0,1)
+
+  inputAttachment:
+    localTransform:
+      position: this.body.inputAttachmentOffset
+      rotation: this.body.inputAttachmentRotation
+  outputAttachment:
+    localTransform:
+      position: this.body.outputAttachmentOffset
+      rotation: this.body.outputAttachmentRotation
+

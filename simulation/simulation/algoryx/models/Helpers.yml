@@ -1,0 +1,90 @@
+# This file contain types useful for
+# extending .agx and .urdf with Brick
+
+.format: 4
+
+.import:
+  Physics: [Geometry]
+  Physics.Mechanics: [RigidBody, RigidBodyAttachment]
+  Materials.PhysicalMaterials: [FloorMaterial]
+
+
+ControlBody:
+  .extends: RigidBody
+  name: ControlBody
+  geom:
+    .type: Geometry.Sphere
+    radius: 0.01
+    enableCollisions: false
+  attachment:
+    .type: RigidBodyAttachment
+    .value: RigidBodyAttachment
+  motionControl: Physics.MotionControl.Kinematics
+
+
+# Just a RigidBody with an attachment at the origin
+RigidBodyParentAttachment:
+  .extends: Physics.Mechanics.RigidBody
+  attachment:
+    .type: Physics.Mechanics.RigidBodyAttachment
+    .value: Physics.Mechanics.RigidBodyAttachment
+
+
+LinkWithCamera:
+  .extends: Physics.Mechanics.RigidBody
+  camera:
+    .type: Physics.Geometry.Box
+    lengths: Vec3(0.01, 0.01, 0.01)
+    enableCollisions: false
+
+
+LinkWithCollider:
+  .extends: Physics.Mechanics.RigidBody
+  collider:
+    .type: Physics.Geometry
+    .value: null
+  attachment:
+    .type: Physics.Mechanics.RigidBodyAttachment
+    .value: Physics.Mechanics.RigidBodyAttachment
+
+
+Plane:
+  .extends: Physics.Geometry.Box
+  lengths:
+    x: 16.0
+    y: 16.0
+    z: 0.1
+  material: FloorMaterial
+    # .value: FloorMaterial
+
+
+ClickScene:
+  .extends: Physics.Component
+  wantInternalPositioning: true
+  clickobjects:
+    .type: List<Scene.Node>
+    .doc: >
+      List of Brick.Scene.Node's which we like click to collect and send/receive to/from controller.
+      The Nodes MUST be a child of this scene (NOT grand child).
+      Therefore declared on same level as this list.
+    .value: []
+
+TNCVisual:
+  .extends: Physics.Geometry.Trimesh
+  filepath: ./obj/tnc.obj
+  enableCollisions: false
+  isSensor: True
+
+
+# A Not too strong HingeJoint
+# Which has specified Stiffness and Damping
+HingeJoint100Nm:
+  .extends: Robotics.HingeJoint
+  inputSignalType: Robotics.SignalType.InputVelocitySignal
+  motorFriction: 0.01
+  maxMotorForce: 100.0 # Nm
+  motorStiffness: 1E10
+  attachmentStiffness:
+    defaultValue: 1E10
+  attachmentDamping:
+    defaultValue: 1E9

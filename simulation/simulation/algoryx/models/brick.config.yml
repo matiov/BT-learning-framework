@@ -1,0 +1,13 @@
+ModuleConfig:
+  name: WARA_robots
+
+  import:
+    Physics: {}
+    Math:
+      autoImport: true
+    Scene: {}
+    Visual: {}
+    Simulation: {}
+    AIToC:
+      filepath: ./AIToC
+

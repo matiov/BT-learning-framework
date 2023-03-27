@@ -1,0 +1,500 @@
+# Models of the Mobile YuMi of different levels
+# The higher the level the more complete model
+
+.format: 4
+
+.import:
+  Physics: [Geometry]
+  Physics.Mechanics: [RigidBody, RigidBodyAttachment, LockJointConnector, PrismaticConnector, HingeConnector]
+  Helpers: [ControlBody, Plane, RigidBodyParentAttachment]
+  Robotics: [HingeJoint, Joint, Segment, Robot, RobotArm]
+  MYuMi: [MYuMiPosControlled]
+  RenderMaterials: [Black, Gray, Blue, Yellow, Green, Red]
+
+
+FingerGeom:
+  .extends: Geometry.Box
+  lengths: Vec3(0.01, 0.02, 0.09)
+  renderMaterial: Red
+
+
+PalmGeom:
+  .extends: Geometry.Box
+  lengths: Vec3(0.13, 0.02, 0.01)
+  renderMaterial: Red
+
+
+# This is the RigidBody consisting of one palm and two finger geometries
+CoarseGripperBody:
+  .extends: RigidBody
+  name: gripper
+  palm:
+    .type: PalmGeom
+    .value: PalmGeom
+  left_finger:
+    .type: FingerGeom
+    localTransform:
+      position: Vec3(-palm.lengths.x / 2, 0.0, -left_finger.lengths.z / 2)
+  right_finger:
+    .type: FingerGeom
+    localTransform:
+      position: Vec3(palm.lengths.x / 2, 0.0, -right_finger.lengths.z / 2)
+  
+
+CoarseYuMiArmBody:
+  .extends: RigidBody
+  geom:
+    .type: Geometry.Sphere
+    enableCollisions: false
+    radius: 0.025
+  mass: 0.3
+
+
+# The Mobile YuMiBody including chassis pillar and base
+CoarseMobileYuMiBody:
+  .extends: RigidBody
+  name: mobileYuMiBody
+  chassis_link:
+    .type: Geometry.Box
+    lengths: Vec3(0.6, 0.6, 0.26)
+    localTransform:
+      position: Vec3(0.058, 0.0, 0.16)
+  
+  pillar_body_link:
+    .type: Geometry.Box
+    lengths: Vec3(0.25, 0.25, 0.8)
+    localTransform:
+      position: Vec3(0.0, 0.0, 0.7)
+  
+  yumi_base_link:
+    .type: Geometry.Box
+    lengths: Vec3(0.4, 0.25, 0.16)
+    localTransform:
+      position: Vec3(0.08, 0.0, 1.05)
+
+
+# The base of a the robot
+CoarseYuMiBase:
+  .extends: Robotics.RobotBase
+  body: CoarseMobileYuMiBody
+  inputAttachment:
+    localTransform:
+      position: body.chassis_link.localTransform.position
+  outputAttachment:
+    localTransform:
+      position: (body.yumi_base_link.lengths / 2) + body.yumi_base_link.localTransform.position
+
+
+CoarseYuMiArmSegment:
+  .extends: Segment
+  body:
+    .value: CoarseYuMiArmBody
+
+
+CoarseYuMiGripperSegment:
+  .extends: Segment
+  graspAttachment:
+    .type: RigidBodyAttachment
+    localTransform:
+      position: Vec3(0, 0, -0.06)
+
+
+CoarseYuMiPrismaticPosJoint:
+  .extends: Robotics.Joint
+  inputSignalType: Robotics.SignalType.InputPositionSignal
+  connector:
+    .value: PrismaticConnector
+    # The decides the range of the Prismatic for the coarse robot arm
+    range:
+      minValue: -0.8
+      maxValue: 0.8
+      stiffness: 1e6
+      damping: 1e5
+  maxMotorForce: 500
+  attachmentStiffness:
+    defaultValue: 1e6
+  attachmentDamping:
+    defaultValue: 1e5
+
+
+CoarseYuMiHingePosJoint:
+  .extends: Robotics.Joint
+  inputSignalType: Robotics.SignalType.InputPositionSignal
+  connector:
+    .value: HingeConnector
+  maxMotorForce: 5
+  attachmentStiffness:
+    defaultValue: 1e6
+  attachmentDamping:
+    defaultValue: 1e5
+
+
+# This is the Coarse YuMi Arm
+# Consisting of 3 arm segments attached with three joints.
+CoarseYuMiArm:
+  .extends: Robotics.RobotArm
+
+  segmentLength:
+    .type: Real
+    .value: 0.15
+
+  segment1:
+    .type: CoarseYuMiArmSegment
+    body:
+      name: segment1
+    inputAttachment:
+      localTransform:
+        position: Vec3(segmentLength, -segmentLength/2, 2*segmentLength)
+    outputAttachment:
+      localTransform:
+        rotation: Quat.FromTo(Vec3(0, 0, 1), Vec3(1, 0, 0))
+  
+  segment2:
+    .type: CoarseYuMiArmSegment
+    body:
+      name: segment2
+    inputAttachment:
+      localTransform:
+        rotation: segment1.outputAttachment.localTransform.rotation
+    outputAttachment:
+      localTransform:
+        rotation: Quat.FromTo(Vec3(0, 0, 1), Vec3(0, 1, 0))
+  
+  segment3:
+    .type: CoarseYuMiArmSegment
+    body:
+      name: segment3
+    inputAttachment:
+      localTransform:
+        rotation: segment2.outputAttachment.localTransform.rotation
+    outputAttachment:
+      localTransform:
+        position: Vec3(segmentLength, 0.0, 0.0)
+  
+  joint1:
+    .type: CoarseYuMiPrismaticPosJoint
+    segment2: this.segment1
+  joint2:
+    .type: CoarseYuMiPrismaticPosJoint
+    segment1: this.segment1
+    segment2: this.segment2
+  joint3:
+    .type: CoarseYuMiPrismaticPosJoint
+    segment1: this.segment2
+    segment2: this.segment3
+  joint4:
+    .type: CoarseYuMiHingePosJoint
+    segment1: this.segment3
+  
+
+# The Gripper segment
+CoarseYuMiGripper:
+  .extends: Robot
+
+  gripper:
+    .type: CoarseYuMiGripperSegment
+    body: CoarseGripperBody
+
+  controlGripper:
+    .type: ControlBody
+    name: GripperControlBody
+
+  controlGripperLock:
+    .type: LockJointConnector
+    attachment1: gripper.outputAttachment
+    attachment2: controlGripper.attachment
+    mainInteraction:
+      name: controlGripperLock
+      stiffness6D:
+        defaultValue: 1E8
+      damping6D:
+        defaultValue: 1E7
+
+
+# This is the lowest level mdoel of the YuMi
+MobileYuMiLevel1:
+  .extends: Robot
+  wantInternalPositioning: true
+
+  # It has base that will be locked to the kinmatick controlBase RigidBody.
+  base:
+    .value: CoarseYuMiBase
+    localTransform:
+      position: Vec3(0, 0, 0)
+    inputAttachment:
+      localTransform:
+        position: Vec3(0, 0, -0.05)
+
+  # The arm is just three bodies connected with prismatics
+  arm:
+    .type: CoarseYuMiArm
+    joint1:
+      segment1: base
+    joint4:
+      segment2: gripper
+
+  # The gripper is connected with a hinge to the arm
+  gripper:
+    .type: CoarseYuMiGripperSegment
+    body: CoarseGripperBody
+    inputAttachment:
+      localTransform:
+        rotation: Quat.AngleAxis(90, Vec3(0, 0, 1))
+
+  # This is a Kinematic body that the RobotBase is connected to
+  # By moving this Kinematic body the RobotBase will follow
+  controlBase:
+    .type: ControlBody
+    name: RobotControlBody
+    localTransform: 
+      position: Vec3(0, 0, 0.0)
+  
+  # This defines the LockJointConnector that connects the RobotBase with the controlBase body
+  controlBaseLock:
+    .type: LockJointConnector
+    name: controlBaseLock
+    attachment1: base.inputAttachment
+    attachment2: controlBase.attachment
+    mainInteraction:
+      name: controlRobotLock
+      stiffness6D:
+        defaultValue: 1E9
+      damping6D:
+        defaultValue: 1E8
+  
+  # This is a Kinematic body that the RobotBase is connected to
+  # By moving this Kinematic body the RobotBase will follow
+  controlGripper:
+    .type: ControlBody
+    name: GripperControlBody
+
+  # This defines the LockJointConnector that connects the RobotBase with the controlBase body
+  controlGripperLock:
+    .type: LockJointConnector
+    attachment1: gripper.outputAttachment
+    attachment2: controlGripper.attachment
+    mainInteraction:
+      name: controlGripperLock
+      stiffness6D:
+        defaultValue: 1E6
+      damping6D:
+        defaultValue: 1e5
+
+
+# This is the next model level of the YuMi. It has the complete arm. But
+# with wheels merged to the chassis and still locked to the world.
+# But it gives a more realistic working range of the robot arm.
+MobileYuMiLevel2:
+  .extends: MYuMiPosControlled
+  externalFilepath: urdf/myumi_description/urdf/myumi_v3_merged.urdf
+
+  stiffness:
+    .type: Real
+    .value: 1e7
+  
+  damping:
+    .type: Real
+    .value: stiffness / 10
+  
+  lockForce:
+    .type: Real
+    .value: 600
+
+  leftArm:
+    joint1:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint2:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint3:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint4:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint5:
+      hingeConnector: 
+        lock:
+          minForce: -20*lockForce
+          maxForce: 20*lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint6:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint7:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+
+  rightArm:
+    joint1:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint2:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint3:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint4:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint5:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint6:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+    joint7:
+      hingeConnector: 
+        lock:
+          minForce: -lockForce
+          maxForce: lockForce
+      attachmentStiffness:
+        defaultValue: stiffness
+      attachmentDamping:
+        defaultValue: damping
+  
+  gripper:
+    .type: CoarseYuMiGripperSegment
+    body:
+      externalReference: yumi_robl_sg_base_link
+    outputAttachment:
+      localTransform:
+        position: Vec3(0, 0, 0.12)
+
+  controlBase:
+    .type: ControlBody
+    name: RobotControlBody
+    localTransform: 
+      position: Vec3(0, 0, -0.0 )
+    
+  controlBaseLock:
+    .type: LockJointConnector
+    name: controlBaseLock
+    attachment1: chassis_link.attachment
+    attachment2: controlBase.attachment
+    mainInteraction:
+      name: controlRobotLock
+      stiffness6D:
+        defaultValue: 1E9
+      damping6D:
+        defaultValue: 1E8
+  
+  controlGripper:
+    .type: ControlBody
+    geom:
+      enableCollisions: true
+    name: GripperControlBody
+
+  controlGripperLock:
+    .type: LockJointConnector
+    attachment1: gripper.outputAttachment
+    attachment2: controlGripper.attachment
+    mainInteraction:
+      name: controlGripperLock
+      stiffness6D:
+        defaultValue: 1e6
+      damping6D:
+        defaultValue: 1e5
+
+
+# This is a scene you can load that shows the level1 and level2 mYuMis side by side.
+Scene:
+  .extends: Physics.Component
+  wantInternalPositioning: true
+
+  floor:
+    .type: Plane
+    .value: Plane
+    localTransform:
+      position: Vec3(0, 0, -lengths.z / 2)
+  
+  mYuMiLevel1:
+    .type: MobileYuMiLevel1
+    .value: MobileYuMiLevel1
+    localTransform:
+      rotation: Quat.AngleAxis(270, Vec3(0, 0, 1))
+  
+  mYuMiLevel2:
+    .type: MobileYuMiLevel2
+    .value: MobileYuMiLevel2
+    localTransform:
+      position: Vec3(1, 0, 0)
+      rotation: Quat.AngleAxis(270, Vec3(0, 0, 1))
+

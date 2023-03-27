@@ -1,0 +1,263 @@
+
+.format: 4
+
+Box:
+  .extends: Physics.Mechanics.RigidBody
+  size:
+    .type: Real
+    .value: 0.1
+  shape:
+    .type: Physics.Geometry.Box
+    lengths: Math.Vec3(this.size, this.size, this.size)
+
+InvisibleBox:
+  .extends: Box
+  shape:
+    renderMaterial: null
+
+Plane:
+  .extends: Physics.Geometry.Box
+  lengths:
+    x: 1.0
+    y: 1.0
+    z: 0.01
+
+Sphere:
+  .extends: Physics.Mechanics.RigidBody
+  size:
+    .type: Real
+    .value: 0.05
+  shape:
+    .type: Physics.Geometry.Sphere
+    radius: size
+
+InvisibleSphere:
+  .extends: Sphere
+  shape:
+    renderMaterial: null
+
+Cylinder:
+  .extends: Physics.Mechanics.RigidBody
+  size:
+    .type: Real
+    .value: 0.05
+  shape:
+    .type: Physics.Geometry.Cylinder
+    length: size
+    radius: size
+
+InvisibleCylinder:
+  .extends: Cylinder
+  shape:
+    renderMaterial: null
+
+HollowCylinder:
+  .extends: Physics.Mechanics.RigidBody
+  size:
+    .type: Real
+    .value: 0.05
+  shape:
+    .type: Physics.Geometry.HollowCylinder
+    length: size
+    innerRadius: size*0.5
+    thickness: size*0.5
+
+InvisibleHollowCylinder:
+  .extends: HollowCylinder
+  shape:
+    renderMaterial: null
+
+Cone:
+  .extends: Physics.Mechanics.RigidBody
+  size:
+    .type: Real
+    .value: 0.05
+  shape:
+    .type: Physics.Geometry.Cone
+    topRadius: 0
+    bottomRadius: size
+    height: size
+
+InvisibleCone:
+  .extends: Cone
+  shape:
+    renderMaterial: null
+
+HollowCone:
+  .extends: Physics.Mechanics.RigidBody
+  size:
+    .type: Real
+    .value: 0.05
+  shape:
+    .type: Physics.Geometry.HollowCone
+    topInnerRadius: 0
+    bottomInnerRadius: size/2
+    innerHeight: size/2
+    outerHeight: size
+    thickness: size/4
+
+InvisibleHollowCone:
+  .extends: HollowCone
+  shape:
+    renderMaterial: null
+
+
+BoxOnAPlane:
+  .extends: Physics.Component
+  box1:
+    .type: Box
+    localTransform:
+      position:
+        z: 0.1
+  box2:
+    .type: InvisibleBox
+    .value: InvisibleBox
+    localTransform:
+      position:
+        z: 0.1
+        x: 0.2
+  plane:
+    .type: Plane
+    .value: Plane
+
+
+CollectionOfPrimitiveShapes:
+  .extends: Physics.Component
+  startX:
+    .type: Real
+    .value: -1
+  box1:
+    .type: Box
+    shape:
+      renderMaterial:
+        ambientColor: Vec3(0.9, 0.7, 0.1)
+        emissiveColor: Vec3(0.9, 0.7, 0.1)
+        specularColor: Vec3(1, 1, 1)
+        diffuseColor: Vec3(0.9, 0.7, 0.1)
+    localTransform:
+      position:
+        x: startX
+  box2:
+    .type: InvisibleBox
+    .value: InvisibleBox
+    localTransform:
+      position:
+        x: startX + 2*size
+  sphere1:
+    .type: Sphere
+    shape:
+      renderMaterial:
+          ambientColor: Vec3(0.3, 0.7, 0.1)
+          emissiveColor: Vec3(0.3, 0.7, 0.1)
+          specularColor: Vec3(1, 1, 1)
+          diffuseColor: Vec3(0.3, 0.7, 0.1)
+    localTransform:
+      position:
+        x: this.box2.localTransform.position.x + 2*size
+  sphere2:
+    .type: InvisibleSphere
+    localTransform:
+      position:
+        x: this.sphere1.localTransform.position.x + 2*size
+  cylinder1:
+    .type: Cylinder
+    shape:
+      renderMaterial:
+          ambientColor: Vec3(0.3, 0.7, 0.6)
+          emissiveColor: Vec3(0.3, 0.7, 0.6)
+          specularColor: Vec3(1, 1, 1)
+          diffuseColor: Vec3(0.3, 0.7, 0.6)
+    localTransform:
+      position:
+        x: this.sphere2.localTransform.position.x + 2*size
+  cylinder2:
+    .type: InvisibleCylinder
+    localTransform:
+      position:
+        x: this.cylinder1.localTransform.position.x + 2*size
+  hollowCylinder1:
+    .type: HollowCylinder
+    shape:
+      renderMaterial:
+          ambientColor: Vec3(0.5, 0.7, 0.9)
+          emissiveColor: Vec3(0.5, 0.7, 0.9)
+          specularColor: Vec3(1, 1, 1)
+          diffuseColor: Vec3(0.5, 0.7, 0.9)
+    localTransform:
+      position:
+        x: this.cylinder2.localTransform.position.x + 2*size
+  hollowCylinder2:
+    .type: InvisibleHollowCylinder
+    localTransform:
+      position:
+        x: this.hollowCylinder1.localTransform.position.x + 2*size
+  cone1:
+    .type: Cone
+    shape:
+      renderMaterial:
+          ambientColor: Vec3(0.3, 0.1, 0.6)
+          emissiveColor: Vec3(0.3, 0.1, 0.6)
+          specularColor: Vec3(1, 1, 1)
+          diffuseColor: Vec3(0.3, 0.1, 0.6)
+    localTransform:
+      position:
+        x: this.hollowCylinder2.localTransform.position.x + 2*size
+  cone2:
+    .type: InvisibleCone
+    localTransform:
+      position:
+        x: this.cone1.localTransform.position.x + 2*size
+  hollowCone1:
+    .type: HollowCone
+    shape:
+      renderMaterial:
+          ambientColor: Vec3(0.3, 0.1, 0.1)
+          emissiveColor: Vec3(0.3, 0.1, 0.1)
+          specularColor: Vec3(1, 1, 1)
+          diffuseColor: Vec3(0.3, 0.1, 0.1)
+    localTransform:
+      position:
+        x: this.cone2.localTransform.position.x + 2*size
+  hollowCone2:
+    .type: InvisibleHollowCone
+    localTransform:
+      position:
+        x: this.hollowCone1.localTransform.position.x + 2*size
+
+
+TransformedBox:
+  .extends: Box
+  shape:
+    localTransform:
+      position: Vec3(this.size, this.size, this.size)
+      rotation: Quat.FromTo(Vec3(0, 1, 1), Vec3(1, 1, 0))
+    renderMaterial:
+      defaultColor: Vec3(1.0, 0.0, 0.0)
+
+TransformedBoxes:
+  .extends: Physics.Component
+  
+  box:
+    .type: Box
+    .value: Box
+    localTransform:
+      position: Vec3(-1, 0, 0.5)
+      rotation: Quat.FromTo(Vec3(0, 1, 1), Vec3(1, 1, 0))
+
+
+  
+  transformedBox:
+    .type: TransformedBox
+    .value: TransformedBox
+    localTransform:
+      position: Vec3(0, 0, 0.51)
+      rotation: Quat.FromTo(Vec3(1, 1, 1), Vec3(1, 1, 0))
+
+  groundPlane:
+    .type: Box
+    shape:
+      lengths: Vec3(3, 3, 0.01)
+      localTransform:
+        position: Vec3(0, 0, -lengths.z)
+      # renderMaterial: null
+    motionControl: Physics.MotionControl.Static

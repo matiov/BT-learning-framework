@@ -1,0 +1,237 @@
+.format: 4
+
+.import:
+  Physics.Mechanics: [RigidBody, RigidBodyAttachment, LockJointConnector]
+  RobotLab: [RobotLab]
+  Helpers: [Plane]
+  MobileYuMiLevels: [CoarseYuMiGripper, MobileYuMiLevel1, MobileYuMiLevel2]
+  GraspingObjects: [Box]
+  Materials.PhysicalMaterials: [GraspingObjectMaterial]
+  RenderMaterials: [Black, Gray, Blue, Yellow, Green]
+
+# A struct to collect the sensor data from signals.
+# To be more easily accessible from python
+SensorData:
+  .extends: Physics.Component
+  signals:
+    .type: Map<String, Signal.SignalBase>
+
+
+RobotLabSceneDecorator:
+  .extends: Scene.SceneDecorator
+  backgroundColor1: Vec3(1, 1,1)
+  backgroundColor2: Vec3(0.7,0.7,1)
+  l0:
+    .type: Scene.Light
+    position: Vec3(4,-4,2)
+    generateShadow: true
+  l1:
+    .type: Scene.Light
+    position: Vec3(0,-2,1)
+  l2:
+    .type: Scene.Light
+    position: Vec3(1,0,10)
+  lights:
+    - this.l0
+    - this.l1
+    - this.l2
+
+
+Table:
+  .extends: Box
+  size: 0.75
+  shape:
+    material: GraspingObjectMaterial
+    renderMaterial: Gray
+  motionControl: Physics.MotionControl.Kinematics
+
+KittingBox:
+  .extends: Physics.Mechanics.RigidBody
+  # Change the length, depth, height, thickness to change the geometry of the box.
+  length:
+    .type: Real
+    .value: 0.4
+  depth:
+    .type: Real
+    .value: 0.4
+  height:
+    .type: Real
+    .value: 0.04
+  thickness:
+    .type: Real
+    .value: 0.005
+  bottom:
+    .type: Physics.Geometry.Box
+    lengths: Math.Vec3(this.length, this.depth, this.thickness)
+    material: GraspingObjectMaterial
+  wall1:
+    .type: Physics.Geometry.Box
+    lengths: Math.Vec3(this.length, this.thickness, this.height)
+    localTransform:
+      position: Math.Vec3(0, -this.depth/2+this.thickness/2, this.height/2)
+    material: GraspingObjectMaterial
+  wall2:
+    .type: Physics.Geometry.Box
+    lengths: Math.Vec3(this.length, this.thickness, this.height)
+    localTransform:
+      position: Math.Vec3(0, this.depth/2-this.thickness/2, this.height/2)
+    material: GraspingObjectMaterial
+  wall3:
+    .type: Physics.Geometry.Box
+    lengths: Math.Vec3(this.thickness, this.depth, this.height)
+    localTransform:
+      position: Math.Vec3(-this.length/2+this.thickness/2, 0, this.height/2)
+    material: GraspingObjectMaterial
+  wall4:
+    .type: Physics.Geometry.Box
+    lengths: Math.Vec3(this.thickness, this.depth, this.height)
+    localTransform:
+      position: Math.Vec3(this.length/2-this.thickness/2, 0, this.height/2)
+    material: GraspingObjectMaterial
+
+YellowBoxComponent:
+  .extends: Physics.Component
+  yellowBox:
+    .type: Box
+    size: 0.1
+    shape:
+      renderMaterial: Yellow
+
+BlueBoxComponent:
+  .extends: Physics.Component
+  blueBox:
+    .type: Box
+    size: 0.1
+    shape:
+      renderMaterial: Blue
+
+GreenBoxComponent:
+  .extends: Physics.Component
+  greenBox:
+    .type: Box
+    size: 0.1
+    shape:
+      renderMaterial: Green
+
+BlackBoxComponent:
+  .extends: Physics.Component
+  blackBox:
+    .type: Box
+    size: 0.1
+    shape:
+      renderMaterial: Black
+
+BaseComponent:
+  .extends: Physics.Mechanics.RigidBody
+  base_link:
+    .type: Physics.Geometry.Sphere
+    radius: 0.05
+    localTransform:
+      position: Math.Vec3(0, 0, 0)
+    material: GraspingObjectMaterial
+
+# A simple Lab with floor, two "tables" and boxes on the tables
+Lab:
+  .extends: Physics.Component
+  wantInternalPositioning: True
+
+  base_link:
+    .type: BaseComponent
+    .value: BaseComponent
+    name: base_link
+    localTransform:
+      position: Math.Vec3(0, 1.0, 0)
+
+  table1:
+    .type: Table
+    name: Table1
+    localTransform:
+      position: Vec3(-1, 0, this.table1.size/2)
+  
+  table2:
+    .type: Table
+    name: Table2
+    localTransform:
+      position: Vec3(1, 0, this.table2.size/2)
+
+  table3:
+    .type: Table
+    name: Table3
+    localTransform:
+      position: Vec3(0, 0, this.table3.size/2)
+
+  floor:
+    .type: Plane
+    .value: Plane
+    localTransform:
+      position: Vec3(0, 0, -lengths.z / 2)
+    material: GraspingObjectMaterial
+
+  kittingBox:
+    .type: KittingBox
+    .value: KittingBox
+    name: KittingBox
+    localTransform:
+      position: Vec3(0, 0, this.table3.size)
+
+  graspingObjectTableContactMaterial:
+    .type: Physics.ContactMaterial
+    material1: GraspingObjectMaterial
+    material2: GraspingObjectMaterial
+    youngsModulus: 1E9
+    damping: 1E8
+    restitution: 0
+    primaryFrictionCoefficient: 1.0
+    secondaryFrictionCoefficient: 1.0
+    frictionReferenceNode: null
+
+
+# The lab with a generic robot inside.
+# This is used to setup the root signals 
+GenericRobotInLabDR:
+  .extends: Physics.Component
+  wantInternalPositioning: true
+
+  lab:
+    .type: Lab
+    .value: Lab
+
+  robot:
+    .type: Robotics.Robot
+    .value: CoarseYuMiGripper
+
+  decorator:
+    .type: RobotLabSceneDecorator
+    .value: RobotLabSceneDecorator
+  
+  camera:
+    .type: Scene.Camera
+    eye: Vec3(0.01, -1.6, 1.2)
+    center: Vec3(0.003, 0.157, 0.57)
+    up: Vec3(-0.003, 0.335, 0.94)
+
+
+CoarseGripperInLabDR:
+  .extends: GenericRobotInLabDR
+  robot:
+    .value: CoarseYuMiGripper
+    localTransform:
+      position: Vec3(0.0, -0.7, 1.2)
+
+
+MobileYuMiLevel1InLabDR:
+  .extends: GenericRobotInLabDR
+  robot:
+    .value: MobileYuMiLevel1
+    localTransform:
+      position: Vec3(0.0, 0.95, 0.05)
+      rotation: Quat.AngleAxis(270, Vec3(0, 0, 1))
+
+
+MobileYuMiLevel2InLabDR:
+  .extends: GenericRobotInLabDR
+  robot:
+    .value: MobileYuMiLevel2
+    localTransform:
+      position: Vec3(0.0, 0.95, 0.05)
+      rotation: Quat.AngleAxis(270, Vec3(0, 0, 1))

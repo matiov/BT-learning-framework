@@ -1,0 +1,56 @@
+.format: 4
+
+.import:
+  Physics.Mechanics: [RigidBodyAttachment]
+  Physics.Mechanics.PrismaticConnector: [TranslationalActuatorPrismaticConnector]
+  Components: [LinkBody,LinkMesh]
+  Components.LinkMesh: [DecomposedLinkMesh]
+  
+ 
+TestWeight:
+  .extends: LinkBody
+  
+  massProperties:
+    mass: 5.198
+    inertia: Vec3(0.009, 0.01, 0.007)
+    localTransform:
+      position: Vec3(0.100, 0.01, 0.0503)
+      #   inertia - when we support 3x3 Inertia:
+      # - [0.00017, 0, 0]
+      # - [0, 0.0002, 0]
+      # - [0, 0, 0.00008]
+  mesh:
+    filepath: TestWeightGoFa.obj
+    color: Vec3(1, 0.95, 0)
+  visual:
+    filepath: TestWeightGoFa.obj
+  cylinder: null
+
+  inputAttachment:
+    .type: RigidBodyAttachment
+    localTransform:
+      position: Vec3(0, 0, 0)
+      rotation: this.inputAttachmentRotation
+      
+  localInputDir: Vec3(0,0,1)
+
+  inputAttachmentRotation:  Quat(1, 0, 0, 0) #for GoFa
+  #inputAttachmentRotation:  Quat(0.5, -0.5, -0.5,-0.5) #for 1100
+  
+  inFrame: null #Turn of the in and out attachment frames (since it inherit the linkbody frames)
+  outFrame: null
+  
+  TcpLocation:
+    .type: Vec3
+    .value: Vec3(0.108, -0.0699, -0.063) *-1 
+TestWeightAtOrigin:
+  .extends: TestWeight
+
+  worldAttachment:
+    .type: Physics.Mechanics.LockVelocityJointAttachment
+    .value: Physics.Mechanics.LockVelocityJointAttachment
+
+  worldLock:
+    .type: Physics.Mechanics.LockJointConnector
+    attachment1: this.handBase.inputAttachment
+    attachment2: this.worldAttachment

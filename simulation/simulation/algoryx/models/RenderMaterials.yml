@@ -1,0 +1,36 @@
+.format: 4
+
+.import:
+  Physics.Geometry: [RenderData]
+
+
+Black:
+  .extends: RenderData
+  defaultColor: Vec3(0.0, 0.0, 0.0)
+  emissiveColor: Vec3(0.0)
+  name: B_Black
+Gray:
+  .extends: RenderData
+  defaultColor: Vec3(0.5, 0.5, 0.5)
+  emissiveColor: Vec3(0.0)
+  name: B_Gray
+Blue:
+  .extends: RenderData
+  defaultColor: Vec3(0.11, 0.1, 0.4)
+  emissiveColor: Vec3(0.0)
+  name: B_Blue
+Yellow:
+  .extends: RenderData
+  defaultColor: Vec3(0.7, 0.7, 0.01)
+  emissiveColor: Vec3(0.0)
+  name: B_Yellow
+Green:
+  .extends: RenderData
+  defaultColor: Vec3(0.02, 0.4, 0.02)
+  emissiveColor: Vec3(0.0)
+  name: B_Green
+Red:
+  .extends: RenderData
+  defaultColor: Vec3(0.9, 0.0, 0.0)
+  emissiveColor: Vec3(0.0)
+  name: B_Red

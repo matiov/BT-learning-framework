@@ -1,0 +1,95 @@
+# Link of IRC_15000
+.format: 4
+
+.import:
+  Physics.Mechanics: [RigidBody]
+  Components: [LinkMesh]
+
+LinkBody:
+  .extends: RigidBody
+  autoGenerateMass: false
+  worldRelativePosition:
+    .type: Vec3
+    .value: Vec3
+
+  
+  localInputDir:
+    .type: Vec3
+    .value: Vec3(0,0,1)
+
+  localOutputDir:
+    .type: Vec3
+    .value: Vec3(0,0,1)
+
+  inputAttachmentOffset:
+    .type: Vec3
+    .value: Vec3
+
+  outputAttachmentOffset:
+    .type: Vec3
+    .value: Vec3
+
+  inputAttachmentRotation:
+    .type: Quat
+    .value: Quat.FromTo(Vec3(0,0,1), this.localInputDir)
+
+  outputAttachmentRotation:
+    .type: Quat
+    .value: Quat.FromTo(Vec3(0,0,1), this.localOutputDir)
+
+  inFrame:
+    .type: Physics.Geometry.Trimesh
+    filepath: ../tnc.obj
+    scale: 1
+    isSensor: true
+    enableCollisions: false
+    localTransform:
+      position: inputAttachmentOffset
+      rotation: inputAttachmentRotation
+  outFrame:
+    .type: Physics.Geometry.Trimesh
+    filepath: ../tnc.obj
+    scale: 1
+    isSensor: true
+    enableCollisions: false
+    localTransform:
+      position: outputAttachmentOffset
+      rotation: outputAttachmentRotation
+
+  mesh:
+    .type: Physics.Geometry.Trimesh
+    .value: LinkMesh
+  visual:
+    .type: Visual.File
+    color: this.mesh.color
+    scaling: Vec3(1,1,1)
+    localTransform:
+      position: this.mesh.translate
+
+  cylinderRadius:
+    .type: Real
+    .value: 0.1
+
+  cylinderDir:
+    .type: Vec3
+    .value: this.outputAttachmentOffset - this.inputAttachmentOffset
+
+  cylinder:
+    .doc: >
+      Used as a collision primitive
+      when the fidelity of mesh collision
+      can be neglected
+
+    .type: Physics.Geometry.Cylinder
+    radius: this.cylinderRadius
+    length: this.cylinderDir.length
+    localTransform:
+      position: this.inputAttachmentOffset + this.cylinderDir*0.5
+      rotation: Quat.FromTo(Vec3(0,1,0),this.cylinderDir.normal)
+    renderMaterial:
+      specularColor: Vec3(1,1,1)
+      diffuseColor: Vec3(1,0,0)
+      opacity: 0.7
+
+
+

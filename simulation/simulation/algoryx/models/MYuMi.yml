@@ -1,0 +1,490 @@
+# Extends the urdf with the Mobile YuMi platform and the YuMi robot
+# Extends the joints and links with AGX drivtrains and Brick signals
+# for sensors and control.
+
+.format: 4
+
+.import:
+  Helpers: [RigidBodyParentAttachment, Plane, LinkWithCollider, TNCVisual, LinkWithCamera]
+  Physics.Mechanics: [HingeConnector]
+  Physics.Mechanics.HingeConnector: [RotationalActuatorHingeConnector]
+  Physics.DriveTrain: [RotatingBody1D, RotatingShaft, GearAttachment, FixedVelocityEngine, TorqueDrivenEngine, GearConnector, HolonomicGearConnector]
+  Materials.PhysicalMaterials: [FloorMaterial, LeftFrontWheelMaterial, RightFrontWheelMaterial, LeftRearWheelMaterial, RightRearWheelMaterial, WheelFloorContactMaterial,  FingerMaterial, FingerFingerContactMaterial, FingerGraspingObjectContactMaterial]
+  yumi: [FingerCollider1, FingerCollider2, YuMiTorqueControlledArm, YuMiVelocityControlledArm, YuMiPositionControlledArm, YuMiTorqueJoint, YuMiVelocityJoint, YuMiArm]
+  DriveTrainJoints: [DriveTrainJointTorque, DriveTrainJointVelocity, PrismaticJointPosition]
+  MobileYuMiPlatform: [SmartWheel, LeftFrontWheel, RightFrontWheel, LeftRearWheel, RightRearWheel]
+
+
+#############################################################
+############      MYUMI     #################################
+#############################################################
+
+MYuMi:
+  .extends: AGXBrick.UrdfModel
+  externalFilepath: urdf/myumi_description/urdf/myumi_v3.urdf
+  packagePath: urdf/
+
+  # .extends: Robotics.Robot
+  # externalFilepath: agx/robot_30.agx
+
+  wantInternalPositioning: true
+  # collisionPolicy: agxBrick.UrdfModel.PairwiseLinkCollisionDisabled
+  # collisionPolicy: agxBrick.UrdfModel.NothingCollides
+
+  finger_joint1:
+    .type: PrismaticJointPosition
+    externalReference: yumi_robl_sg_finger_1_base_joint
+    protocolReference: /yumi_left_gripper
+  finger_joint2:
+    .type: PrismaticJointPosition
+    externalReference: yumi_robr_sg_finger_1_base_joint
+    protocolReference: /yumi_right_gripper
+      
+  parentAttachment:
+    .type: Physics.Mechanics.LockJointAttachment
+    .value: Physics.Mechanics.LockJointAttachment
+  
+  armInputSignalType:
+    .type: Robotics.SignalType
+    .value: Robotics.SignalType.InputVelocitySignal
+  
+  base_link:
+    .type: Physics.Mechanics.RigidBody
+    externalReference: base_link
+    localTransform:
+      position: Vec3(0,0,0)
+  
+  roblFinger1_body_link:
+    .type: FingerCollider1
+    externalReference: yumi_robl_sg_finger_1_link
+    removedCollider:
+      externalReference: collision_1
+      enableCollisions: false
+    
+  roblFinger2_body_link:
+    .type: FingerCollider2
+    externalReference: yumi_robl_sg_finger_2_link
+    removedCollider:
+      externalReference: collision_1
+      enableCollisions: false
+
+  robRFinger1_body_link:
+    .type: FingerCollider1
+    externalReference: yumi_robr_sg_finger_1_link
+    removedCollider:
+      externalReference: collision_1
+      enableCollisions: false
+    
+  robRFinger2_body_link:
+    .type: FingerCollider2
+    externalReference: yumi_robr_sg_finger_2_link
+    removedCollider:
+      externalReference: collision_1
+      enableCollisions: false
+  
+  camera_visor:
+    .type: LinkWithCamera
+    externalReference: camera_visor
+    camera:
+      name: camera_RenderTargetHEAD_60
+      localTransform:
+        position: Vec3(-0.011, 0.0, 0.0)
+        rotation: Quat.AngleAxis(15, Vec3(0,1,0))
+
+  pillar_body_link:
+    .type: LinkWithCollider
+    externalReference: pillar_body_link
+    collider:
+      .type: Physics.Geometry
+      externalReference: collision_1
+  yumi_base_link:
+    .type: LinkWithCollider
+    externalReference: yumi_base_link
+    collider:
+      .type: Physics.Geometry
+      externalReference: collision_1
+  chassis_link:
+    .type: LinkWithCollider
+    externalReference: chassis_link
+    collider:
+      .type: Physics.Geometry
+      externalReference: collision_1
+
+  leftArm:
+    .type: YuMiArm
+    joint1:
+      hingeConnector:
+        externalReference: yumi_robl_joint_1
+      protocolReference: /yumi_robl_joint_1
+      initialPosition: 0 #degrees
+    joint2:
+      hingeConnector:
+        externalReference: yumi_robl_joint_2
+      protocolReference: /yumi_robl_joint_2
+      initialPosition: -130 #degrees
+    joint3:
+      hingeConnector:
+        externalReference: yumi_robl_joint_3
+      protocolReference: /yumi_robl_joint_3
+      initialPosition: 30 #degrees
+    joint4:
+      hingeConnector:
+        externalReference: yumi_robl_joint_4
+      protocolReference: /yumi_robl_joint_4
+      initialPosition: 0 #degrees
+    joint5:
+      hingeConnector:
+        externalReference: yumi_robl_joint_5
+      protocolReference: /yumi_robl_joint_5
+      initialPosition: 40 #degrees
+    joint6:
+      hingeConnector:
+        externalReference: yumi_robl_joint_6
+      protocolReference: /yumi_robl_joint_6
+      initialPosition: 0 #degrees
+    joint7:
+      hingeConnector:
+        externalReference: yumi_robl_joint_7
+      protocolReference: /yumi_robl_joint_7
+      initialPosition: 135 #degrees
+
+  rightArm:
+    .type: YuMiArm
+    joint1:
+      hingeConnector:
+        externalReference: yumi_robr_joint_1
+      protocolReference: /yumi_robr_joint_1
+      initialPosition: 0 #degrees
+    joint2:
+      hingeConnector:
+        externalReference: yumi_robr_joint_2
+      protocolReference: /yumi_robr_joint_2
+      initialPosition: -130 #degrees
+    joint3:
+      hingeConnector:
+        externalReference: yumi_robr_joint_3
+      protocolReference: /yumi_robr_joint_3
+      initialPosition: 30 #degrees
+    joint4:
+      hingeConnector:
+        externalReference: yumi_robr_joint_4
+      protocolReference: /yumi_robr_joint_4
+      initialPosition: 0 #degrees
+    joint5:
+      hingeConnector:
+        externalReference: yumi_robr_joint_5
+      protocolReference: /yumi_robr_joint_5
+      initialPosition: -40 #degrees
+    joint6:
+      hingeConnector:
+        externalReference: yumi_robr_joint_6
+      protocolReference: /yumi_robr_joint_6
+      initialPosition: 0 #degrees
+    joint7:
+      hingeConnector:
+        externalReference: yumi_robr_joint_7
+      protocolReference: /yumi_robr_joint_7
+      initialPosition: -135 #degrees
+
+  leftFrontWheel:
+    .type: LeftFrontWheel
+    .value: LeftFrontWheel
+
+  rightFrontWheel:
+    .type: RightFrontWheel
+    .value: RightFrontWheel
+
+  leftRearWheel:
+    .type: LeftRearWheel
+    .value: LeftRearWheel
+  
+  rightRearWheel:
+    .type: RightRearWheel
+    .value: RightRearWheel
+  
+  leftFrontWheelPlaneContactMaterial:
+    .type: WheelFloorContactMaterial
+    material1: leftFrontWheel.wheel.collision_cylinder.material
+    frictionReferenceNode: leftFrontWheel.wheelFitting.rba
+  rightFrontWheelPlaneContactMaterial:
+    .type: WheelFloorContactMaterial
+    material1: rightFrontWheel.wheel.collision_cylinder.material
+    frictionReferenceNode: rightFrontWheel.wheelFitting.rba
+  rightRearWheelPlaneContactMaterial:
+    .type: WheelFloorContactMaterial
+    material1: rightRearWheel.wheel.collision_cylinder.material
+    frictionReferenceNode: rightRearWheel.wheelFitting.rba
+  leftRearWheelPlaneContactMaterial:
+    .type: WheelFloorContactMaterial
+    material1: leftRearWheel.wheel.collision_cylinder.material
+    frictionReferenceNode: leftRearWheel.wheelFitting.rba
+  
+  fingerContactMaterial:
+    .type: FingerFingerContactMaterial
+    .value: FingerFingerContactMaterial
+
+  fingerGraspingObjectContactMaterial:
+    .type: FingerGraspingObjectContactMaterial
+    .value: FingerGraspingObjectContactMaterial
+
+  # yuMiGroup:
+  #   .type: Physics.CollisionGroup
+  #   name: yumi_group
+  #   members:
+  #    - this.pillar_body_link
+  #    - this.yumi_base_link
+  #    - this.rightRearWheel
+  #    - this.leftRearWheel
+  #    - this.leftFrontWheel
+  #    - this.rightFrontWheel
+  #    - this.chassis_link
+  
+  # collisionGroupPair:
+  #   .type: Physics.CollisionGroup.CollisionGroupPair
+  #   group1: yuMiGroup
+  #   group2: yuMiGroup
+
+MYuMiTorqueControlled:
+  .extends: MYuMi
+  # Would be nice to just change the value on the arms. And not explicitly write the
+  # externalReferences everytime. But do not think that is possible right now?
+  leftArm:
+    .value: YuMiTorqueControlledArm
+    joint1:
+      hingeConnector:
+        externalReference: yumi_robl_joint_1
+      protocolReference: /yumi_robl_joint_1
+      initialPosition: 0 #degrees
+    joint2:
+      hingeConnector:
+        externalReference: yumi_robl_joint_2
+      protocolReference: /yumi_robl_joint_2
+      initialPosition: -130 #degrees
+    joint3:
+      hingeConnector:
+        externalReference: yumi_robl_joint_3
+      protocolReference: /yumi_robl_joint_3
+      initialPosition: 30 #degrees
+    joint4:
+      hingeConnector:
+        externalReference: yumi_robl_joint_4
+      protocolReference: /yumi_robl_joint_4
+      initialPosition: 0 #degrees
+    joint5:
+      hingeConnector:
+        externalReference: yumi_robl_joint_5
+      protocolReference: /yumi_robl_joint_5
+      initialPosition: 40 #degrees
+    joint6:
+      hingeConnector:
+        externalReference: yumi_robl_joint_6
+      protocolReference: /yumi_robl_joint_6
+      initialPosition: 0 #degrees
+    joint7:
+      hingeConnector:
+        externalReference: yumi_robl_joint_7
+      protocolReference: /yumi_robl_joint_7
+      initialPosition: 135 #degrees
+  rightArm:
+    .value: YuMiTorqueControlledArm
+    joint1:
+      hingeConnector:
+        externalReference: yumi_robr_joint_1
+      protocolReference: /yumi_robr_joint_1
+      initialPosition: 0 #degrees
+    joint2:
+      hingeConnector:
+        externalReference: yumi_robr_joint_2
+      protocolReference: /yumi_robr_joint_2
+      initialPosition: -130 #degrees
+    joint3:
+      hingeConnector:
+        externalReference: yumi_robr_joint_3
+      protocolReference: /yumi_robr_joint_3
+      initialPosition: 30 #degrees
+    joint4:
+      hingeConnector:
+        externalReference: yumi_robr_joint_4
+      protocolReference: /yumi_robr_joint_4
+      initialPosition: 0 #degrees
+    joint5:
+      hingeConnector:
+        externalReference: yumi_robr_joint_5
+      protocolReference: /yumi_robr_joint_5
+      initialPosition: -40 #degrees
+    joint6:
+      hingeConnector:
+        externalReference: yumi_robr_joint_6
+      protocolReference: /yumi_robr_joint_6
+      initialPosition: 0 #degrees
+    joint7:
+      hingeConnector:
+        externalReference: yumi_robr_joint_7
+      protocolReference: /yumi_robr_joint_7
+      initialPosition: -135 #degrees
+
+
+MYuMiPosControlled:
+  .extends: MYuMi
+  # Would be nice to just change the value on the arms. And not explicitly write the
+  # externalReferences everytime. But do not think that is possible right now?
+
+  leftArm:
+    .value: YuMiPositionControlledArm
+    joint1:
+      hingeConnector:
+        externalReference: yumi_robl_joint_1
+      protocolReference: /yumi_robl_joint_1
+      initialPosition: 0 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robl_joint1_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robl_joint1_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robl_joint1_torque
+    joint2:
+      hingeConnector:
+        externalReference: yumi_robl_joint_2
+      protocolReference: /yumi_robl_joint_2
+      initialPosition: -130 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robl_joint2_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robl_joint2_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robl_joint2_torque
+    joint3:
+      hingeConnector:
+        externalReference: yumi_robl_joint_3
+      protocolReference: /yumi_robl_joint_3
+      initialPosition: 135 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robl_joint3_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robl_joint3_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robl_joint3_torque
+    joint4:
+      hingeConnector:
+        externalReference: yumi_robl_joint_4
+      protocolReference: /yumi_robl_joint_4
+      initialPosition: 30 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robl_joint4_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robl_joint4_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robl_joint4_torque
+    joint5:
+      hingeConnector:
+        externalReference: yumi_robl_joint_5
+      protocolReference: /yumi_robl_joint_5
+      initialPosition: 0 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robl_joint5_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robl_joint5_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robl_joint5_torque
+    joint6:
+      hingeConnector:
+        externalReference: yumi_robl_joint_6
+      protocolReference: /yumi_robl_joint_6
+      initialPosition: 40 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robl_joint6_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robl_joint6_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robl_joint6_torque
+    joint7:
+      hingeConnector:
+        externalReference: yumi_robl_joint_7
+      protocolReference: /yumi_robl_joint_7
+      initialPosition: 0 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robl_joint7_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robl_joint7_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robl_joint7_torque
+
+  rightArm:
+    .value: YuMiPositionControlledArm
+    joint1:
+      hingeConnector:
+        externalReference: yumi_robr_joint_1
+      protocolReference: /yumi_robr_joint_1
+      initialPosition: 0 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robr_joint1_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robr_joint1_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robr_joint1_torque
+    joint2:
+      hingeConnector:
+        externalReference: yumi_robr_joint_2
+      protocolReference: /yumi_robr_joint_2
+      initialPosition: -130 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robr_joint2_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robr_joint2_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robr_joint2_torque
+    joint3:
+      hingeConnector:
+        externalReference: yumi_robr_joint_3
+      protocolReference: /yumi_robr_joint_3
+      initialPosition: -135 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robr_joint3_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robr_joint3_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robr_joint3_torque
+    joint4:
+      hingeConnector:
+        externalReference: yumi_robr_joint_4
+      protocolReference: /yumi_robr_joint_4
+      initialPosition: 30 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robr_joint4_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robr_joint4_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robr_joint4_torque
+    joint5:
+      hingeConnector:
+        externalReference: yumi_robr_joint_5
+      protocolReference: /yumi_robr_joint_5
+      initialPosition: 0 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robr_joint5_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robr_joint5_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robr_joint5_torque
+    joint6:
+      hingeConnector:
+        externalReference: yumi_robr_joint_6
+      protocolReference: /yumi_robr_joint_6
+      initialPosition: 40 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robr_joint6_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robr_joint6_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robr_joint6_torque
+    joint7:
+      hingeConnector:
+        externalReference: yumi_robr_joint_7
+      protocolReference: /yumi_robr_joint_7
+      initialPosition: 0 #degrees
+      jointPositionSensor:
+        protocolReference: /yumi_robr_joint7_position
+      jointVelocitySensor:
+        protocolReference: /yumi_robr_joint7_velocity
+      jointTorqueSensor:
+        protocolReference: /yumi_robr_joint7_torque

@@ -1,0 +1,38 @@
+# This example declares 3 box pyramid.
+# The relative size of the boxes are constant
+# but the size can be scaled.
+# The box material and the
+# box-box contact material are declared
+# Also the pose of the top box
+# is published if using ROS
+
+.format: 4
+
+FingerMaterial:
+  .const: true
+  .extends: Physics.Material
+  name: FingerMaterial
+  bulk:
+    density: 2E3
+
+
+GripperMaterial:
+  .const: true
+  .extends: Physics.Material
+  name: GripperMaterial
+  bulk:
+    density: 2E3
+
+TableMaterial:
+  .const: true
+  .extends: Physics.Material
+  name: TableMaterial
+  bulk:
+    density: 2E2
+
+LegoMaterial:
+  .const: true
+  .extends: Physics.Material
+  name: LegoMaterial
+  bulk:
+    density: 2E2

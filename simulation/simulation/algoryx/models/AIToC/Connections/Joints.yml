@@ -1,0 +1,204 @@
+.format: 4
+
+.import:
+  Physics.Mechanics: [HingeConnector]
+  Physics.Mechanics.HingeConnector: [RotationalActuatorHingeConnector]
+  Physics.Mechanics.PrismaticConnector: [TranslationalActuatorPrismaticConnector]
+  Physics.DriveTrain: [RotatingBody1D,RotatingShaft, GearAttachment, FixedVelocityEngine, TorqueDrivenEngine, GearConnector, HolonomicGearConnector]
+
+HingeJointWithSensors:
+  .extends: Robotics.HingeJoint
+
+  jointPositionSensor:
+    .type: Robotics.Sensor.JointSensor
+    joint: this
+    outputSignalType: Robotics.SignalType.OutputPositionSignal
+
+  jointVelocitySensor:
+    .type: Robotics.Sensor.JointSensor
+    joint: this
+    outputSignalType: Robotics.SignalType.OutputVelocitySignal
+
+  jointTorqueSensor:
+    .type: Robotics.Sensor.JointSensor
+    joint: this
+    outputSignalType: Robotics.SignalType.OutputForceSignal
+
+
+PrismaticPreparedForDriveTrain:
+  .extends: TranslationalActuatorPrismaticConnector
+  distance: 0
+  translationalFrictionCoefficient: 0.0
+  internalInertia: 0.00000001
+  lock:
+    minForce: 0
+    maxForce: 0
+  motor:
+    minForce: -10
+    maxForce: 10
+    speed: 0
+
+
+ToolPrismaticJoint:
+  .extends: Robotics.Joint
+  inputSignalType: Robotics.SignalType.InputPositionSignal
+  rangeMin:
+    .type: Real
+  rangeMax:
+    .type: Real
+  attachmentStiffness:
+    defaultValue: 100000000
+  attachmentDamping:
+    defaultValue: 330000000
+  prismatic:
+    .type: PrismaticPreparedForDriveTrain
+    shaft: this.shaft
+    range:
+      maxValue: rangeMax
+      minValue: rangeMin
+      enabled: true
+      stiffness: 1E8
+      damping: 1E6
+  connector: this.prismatic
+  shaft:
+    .type: RotatingShaft
+
+  positionSensor:
+    .type: Robotics.Sensor.JointSensor
+    joint: this
+    outputSignalType: Robotics.SignalType.OutputPositionSignal 
+  torqueSensor:
+    .type: Robotics.Sensor.JointSensor
+    joint: this
+    outputSignalType: Robotics.SignalType.OutputForceSignal
+  velocitySensor:
+    .type: Robotics.Sensor.JointSensor
+    joint: this
+    outputSignalType: Robotics.SignalType.OutputVelocitySignal
+
+HingePreparedForDriveTrain:
+  .extends: RotationalActuatorHingeConnector
+  angle: 0
+  rotationalFrictionCoefficient: 0.0
+  internalInertia: 0.00000001
+  lock:
+    minForce: 0
+    maxForce: 0
+  motor:
+    minForce: 0
+    maxForce: 0
+
+DriveTrainJointTemplate:
+  .extends: HingeJointWithSensors
+  inputSignalType: Robotics.SignalType.InputForceSignal
+  gearRatio:
+    .type: Real
+    .value: 1
+  motorInertia:
+    .type: Real
+    .value: 1 # Will be overwritten
+  gearInertia:
+    .type: Real
+    .value: 1 # Will be overwritten
+  attachmentStiffness:
+    defaultValue: 100000000
+  attachmentDamping:
+    defaultValue: 330000000
+  hingeConnector: 
+    .value: HingePreparedForDriveTrain
+    shaft: this.inputShaft
+  inputShaft:
+    .type: RotatingShaft
+    massProperties:
+      inertia: 0.00000001
+  engine:
+    .type: RotatingBody1D 
+  engineInertia:
+    .type: Real
+    .value: this.motorInertia + this.gearInertia /(this.gearRatio * this.gearRatio)
+
+  inputSignal:
+    .type: Signal.SignalBase
+  gear:
+    .type: HolonomicGearConnector
+
+DriveTrainJointTorque:
+  .extends: DriveTrainJointTemplate
+  engine:
+    .value: TorqueDrivenEngine
+    initialTorque: 0
+    massProperties:
+      inertia: this.engineInertia
+  inputSignal:
+    .value: Signal.EngineTorqueInput
+    engine: this.engine
+  gear:
+    attachment1: this.engine.outputAttachment
+    attachment2: this.inputShaft.inputAttachment
+    interaction:
+      stiffness: this.motorStiffness
+      damping: this.motorDamping
+      gearRatio: this.gearRatio
+
+DriveTrainJointVelocity:
+  .extends: DriveTrainJointTemplate
+  engine:
+    .value: FixedVelocityEngine
+    targetRPM: 0 # is really rad/s
+    maxTorque: 1000000 # This is where you limit the torque of the motor #NOT WORKING YET
+    massProperties:
+      inertia: this.engineInertia
+  inputSignal:
+    .value: Signal.FixedVelocityEngineInput
+    engine: this.engine
+  gear:
+    attachment1: this.engine.outputAttachment
+    attachment2: this.inputShaft.inputAttachment
+    interaction:
+      stiffness: this.motorStiffness
+      damping: this.motorDamping
+      gearRatio: this.gearRatio
+
+HingeWithZeroAngle:
+  .extends: HingeConnector
+  angle: 0
+  rotationalFrictionCoefficient: 0.0
+  staticFrictionRotational:
+    minForce: -0.1
+    maxForce: 0.1
+  lock:
+    minForce: 0
+    maxForce: 0
+  motor:
+    minForce: 0
+    maxForce: 0
+
+HingeTorqueJoint:
+  .extends: HingeJointWithSensors
+  hingeConnector: HingeWithZeroAngle
+  inputSignalType: Robotics.SignalType.InputForceSignal
+  attachmentStiffness:
+    defaultValue: 100000000
+  attachmentDamping:
+    defaultValue: 3300000
+
+HingePositionJoint:
+  .extends: HingeTorqueJoint
+  hingeConnector: 
+    .value: HingeWithZeroAngle
+    # Add lock to free dof
+    lock:
+      minForce: -100
+      maxForce: 100
+  inputSignalType: Robotics.SignalType.InputPositionSignal
+
+
+HingeVelocityJoint:
+  .extends: HingeTorqueJoint
+  hingeConnector: 
+    .value: HingeWithZeroAngle
+    # Add motor to free dof
+    motor:
+      minForce: -200
+      maxForce: 200
+  inputSignalType: Robotics.SignalType.InputVelocitySignal

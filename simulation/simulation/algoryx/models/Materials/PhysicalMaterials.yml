@@ -1,0 +1,86 @@
+# A collection of geometry materials
+
+.format: 4
+
+.import:
+  Physics: [Material, ContactMaterial]
+
+FingerMaterial:
+  .const: true
+  .extends: Physics.Material
+  name: FingerMaterial
+  bulk:
+    density: 2E3
+
+GraspingObjectMaterial:
+  .const: true
+  .extends: Physics.Material
+  name: GraspingObjectMaterial
+
+FloorMaterial:
+  .const: true
+  .extends: Material
+  name: FloorMaterial
+
+WheelMaterial:
+  .const: true
+  .extends: Material
+  name: WheelMaterial
+
+# One material for each wheel. Because they must have different primaryDirection
+LeftFrontWheelMaterial:
+  .const: true
+  .extends: Material
+  name: LeftFrontWheelMaterial
+RightFrontWheelMaterial:
+  .const: true
+  .extends: Material
+  name: RightFrontWheelMaterial
+LeftRearWheelMaterial:
+  .const: true
+  .extends: Material
+  name: LeftRearWheelMaterial
+RightRearWheelMaterial:
+  .const: true
+  .extends: Material
+  name: RightRearWheelMaterial
+
+WheelFloorContactMaterial:
+  .extends: Physics.ContactMaterial
+  material1: FloorMaterial
+  material2: WheelMaterial
+  youngsModulus: 1E9
+  restitution: 0
+  primaryFrictionCoefficient: 1
+  secondaryFrictionCoefficient: 0.1
+  frictionReferenceNode: null
+
+FingerFingerContactMaterial:
+  .extends: Physics.ContactMaterial
+  material1: FingerMaterial
+  material2: FingerMaterial
+  youngsModulus: 1E9
+  restitution: 0
+  primaryFrictionCoefficient: 1
+  secondaryFrictionCoefficient: 1
+  frictionReferenceNode: null
+
+FingerGraspingObjectContactMaterial:
+  .extends: Physics.ContactMaterial
+  material1: FingerMaterial
+  material2: GraspingObjectMaterial
+  youngsModulus: 1E9
+  restitution: 0
+  primaryFrictionCoefficient: 1
+  secondaryFrictionCoefficient: 1
+  frictionReferenceNode: null
+
+GraspingGraspingObjectContactMaterial:
+  .extends: Physics.ContactMaterial
+  material1: GraspingObjectMaterial
+  material2: GraspingObjectMaterial
+  youngsModulus: 1E9
+  restitution: 0
+  primaryFrictionCoefficient: 0.6
+  secondaryFrictionCoefficient: 0.6
+  frictionReferenceNode: null

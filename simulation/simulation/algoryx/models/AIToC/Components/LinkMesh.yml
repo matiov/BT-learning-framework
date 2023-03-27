@@ -1,0 +1,35 @@
+# Link of IRC_15000
+.format: 4
+
+.import:
+  Physics.Mechanics: [RigidBody]
+  Physics.Materials: [Steel]
+
+LinkMesh:
+  .extends: AGXBrick.DecomposedTrimesh
+  translate:
+    .type: Vec3
+    .value: Vec3
+
+  color:
+    .type: Vec3
+    .value: Vec3(0.5,0.5,0.5)
+
+  material: Steel
+
+  localTransform:
+    position: this.translate
+
+  renderMaterial:
+    defaultColor: Vec3(0.5,0.5,0.5)
+    specularColor: this.color
+    diffuseColor: this.color
+    opacity: 1
+
+DecomposedLinkMesh:
+  .extends: LinkMesh
+  elementResolution: 50
+  renderMaterial:
+    specularColor: this.color
+    diffuseColor: this.color
+    opacity: 1

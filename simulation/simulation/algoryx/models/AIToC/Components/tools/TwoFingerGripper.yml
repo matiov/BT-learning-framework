@@ -1,0 +1,297 @@
+.format: 4
+
+.import:
+  Physics.Mechanics: [RigidBodyAttachment]
+  Physics.Mechanics.PrismaticConnector: [TranslationalActuatorPrismaticConnector]
+  Components: [LinkBody,LinkMesh]
+  Components.LinkMesh: [DecomposedLinkMesh]
+  Connections.Joints: [ToolPrismaticJoint]
+  Global.Materials: [FingerMaterial]
+  Physics.DriveTrain: [RotatingShaft, GearAttachment, GearConnector]
+
+HandBase:
+  .extends: LinkBody
+  prismaticOffset:
+    .type: Vec3
+    .value: Vec3(-0.03,0,0)
+  fingerCenter:
+    .type: Vec3
+    .value: Vec3(0.115,0,0)
+  massProperties:
+    mass: 0.215
+    inertia: Vec3(0.00008, 0.0002, 0.00017)
+    localTransform:
+      position: Vec3(0.0495,0,0) #Vec3(0.0495,-0.0097,0.0123)
+      #   inertia - when we support 3x3 Inertia:
+      # - [0.00017, 0, 0]
+      # - [0, 0.0002, 0]
+      # - [0, 0, 0.00008]
+  mesh:
+    filepath: HandBase.rms.obj
+    color: Vec3(0.7451, 0.7451, 0.7451)
+  visual:
+    filepath: HandBase.rms.obj
+  cylinder: null
+
+  inputAttachment:
+    .type: RigidBodyAttachment
+    localTransform:
+      position: Vec3(0, 0, 0)
+      rotation: Quat.FromTo(Vec3(0,0,1),Vec3(0,1,0))
+
+  downFingerAttachment:
+    .type: RigidBodyAttachment
+    localTransform:
+      position: this.inputAttachment.localTransform.position + fingerCenter + prismaticOffset
+      rotation: Quat.FromTo(Vec3(0,0,1),Vec3(0,1,0))
+  upFingerAttachment:
+    .type: RigidBodyAttachment
+    localTransform:
+      position: this.inputAttachment.localTransform.position + fingerCenter + prismaticOffset
+      rotation: Quat.FromTo(Vec3(0,0,1),Vec3(0,1,0))
+  inFrame: null
+  outFrame: null
+
+Finger:
+  .extends: LinkBody
+  prismaticOffset:
+    .type: Vec3
+    .value: Vec3(0,0,0)
+  cylinderLength:
+    .type: Real
+    .value: 0.038
+  signDepth:
+    .type: Real
+    .value: -1
+  localPos:
+    .type: Vec3
+  sideOffset:
+    .type: Vec3
+    .value: Vec3(0,0,0.005)
+  localDepthOffset:
+    .type: Vec3
+    .value: Vec3(0,signDepth * 0.001,0)
+  gripCylinder1:
+    .type: Physics.Geometry.Capsule
+    material: FingerMaterial
+    radius: 0.001
+    length: cylinderLength
+    enableCollisions: true
+    localTransform:
+      position: worldRelativePosition + localPos + sideOffset + localDepthOffset
+      rotation: Quat.AngleAxis(90,Vec3(0,0,1))
+  gripCylinder2:
+    .type: Physics.Geometry.Capsule
+    material: FingerMaterial
+    radius: 0.001
+    length: cylinderLength
+    enableCollisions: true
+    localTransform:
+      position: worldRelativePosition + localPos - sideOffset + localDepthOffset
+      rotation: Quat.AngleAxis(90,Vec3(0,0,1))
+  inputAttachment:
+    .type: RigidBodyAttachment
+    .value: RigidBodyAttachment
+    localTransform:
+      position: localPos + worldRelativePosition + prismaticOffset
+      rotation: Quat.FromTo(Vec3(0,0,1),Vec3(0,1,0))
+  inFrame: null
+  outFrame: null
+
+DownFinger:
+  .extends: Finger
+  massProperties:
+    mass: 0.0075
+    inertia: Vec3(0.00002, 0.00002, 0.000005)
+    localTransform:
+      position: Vec3(0.092, -0.005, 0) + this.worldRelativePosition
+      #   inertia - when we support 3x3 Inertia:
+      # - [0.00002, 0, 0]
+      # - [0, 0.00002, 0]
+      # - [0, 0, 0.000005]
+
+  meshVisual:
+    .type: LinkMesh
+    enableCollisions: false
+    filepath: DownFinger.rms.obj
+    color: Vec3(0.251, 0.251, 0.251)
+    localTransform:
+      position: this.worldRelativePosition
+  visual: null
+  cylinder: null
+UpFinger:
+  .extends: Finger
+  signDepth: 1
+  massProperties:
+    mass: 0.0075
+    inertia: Vec3(0.00002, 0.00002, 0.000005)
+    localTransform:
+      position: Vec3(0.092, 0.005, 0) + this.worldRelativePosition
+      #   inertia - when we support 3x3 Inertia:
+      # - [0.00002, 0, 0]
+      # - [0, 0.00002, 0]
+      # - [0, 0, 0.000005]
+
+  meshVisual:
+    .type: LinkMesh
+    enableCollisions: false
+    filepath: UpFinger.rms.obj
+    color: Vec3(0.251, 0.251, 0.251)
+    localTransform:
+      position: this.worldRelativePosition
+  visual: null
+  
+  cylinder: null
+
+
+MimicDriveTrain:
+  .extends: Physics.Component
+  
+  shaftDown:
+    .type: RotatingShaft
+    .value: RotatingShaft
+
+  shaftUp:
+    .type: RotatingShaft
+    .value: RotatingShaft
+
+  gear:
+    .type: GearConnector
+    attachment1: this.shaftDown.outputAttachment
+    attachment2: this.shaftUp.inputAttachment
+    interaction:
+      gearRatio: -1
+
+TwoFingerGripper:
+  .extends: Robotics.RobotArm
+  wantInternalPositioning: True
+  
+  driveTrain:
+    .type: MimicDriveTrain
+    .value: MimicDriveTrain
+
+  prismaticStiffness: 
+    .type: Real
+    .value: 1E8
+  prismaticDamping: 
+    .type: Real
+    .value: 1E6
+  
+  handBase:
+    .type: HandBase
+    fingerCenter: Vec3(0.115,0,0)
+
+  ## Define segments to be able to define a joint
+  handSegment:
+    .type: Robotics.Segment
+    body: handBase
+    outputAttachment:
+      localTransform:
+        position: this.handSegment.body.downFingerAttachment.localTransform.position
+        rotation: this.handSegment.body.downFingerAttachment.localTransform.rotation
+  
+  downFingerSegment:
+    .type: Robotics.Segment
+    body: downFinger
+    inputAttachment:
+      localTransform:
+        position: this.downFingerSegment.body.inputAttachment.localTransform.position
+        rotation: this.downFingerSegment.body.inputAttachment.localTransform.rotation
+
+  upFinger:
+    .type: UpFinger
+    localPos: this.handBase.fingerCenter
+    worldRelativePosition: this.handBase.worldRelativePosition + Vec3(-0.0035, 0.0027, -0.049)
+    prismaticOffset: this.handBase.prismaticOffset
+
+  downFinger:
+    .type: DownFinger
+    localPos: this.handBase.fingerCenter
+    worldRelativePosition: this.handBase.worldRelativePosition + Vec3(0.0035, -0.0027, 0.049)
+    prismaticOffset: this.handBase.prismaticOffset
+
+  toolVelocityJoint:
+    .type: ToolPrismaticJoint
+    shaft: this.driveTrain.shaftDown
+    segment1: this.handSegment
+    segment2: this.downFingerSegment
+    inputSignalType: Robotics.SignalType.InputVelocitySignal
+    rangeMin: -0.02001
+    rangeMax: 0.0
+    initialPosition: this.toolVelocityJoint.rangeMin + 0.00001 # position just inside range to avoid initial jump
+    protocolReference: toolVelocityJoint
+
+
+  # THE TOOL WILL NOT BE COMPLETE UNLESS THIS IS UNCOMMENTED
+  # BUT WHEN USED ON THE ROBOT CONTROLLED WITH CLICK
+  # THIS IS REPLACED WITH A JOINT
+  # downFingerPrismatic:
+  #   .type: TranslationalActuatorPrismaticConnector
+  #   attachment1: this.handBase.downFingerAttachment
+  #   attachment2: this.downFinger.inputAttachment
+  #   shaft: this.driveTrain.shaftDown
+  #   distance: this.downFingerPrismatic.range.minValue
+  #   mainInteraction:
+  #     stiffness6D:
+  #       defaultValue: this.prismaticStiffness
+  #     damping6D:
+  #       defaultValue: this.prismaticDamping
+  #   motor:
+  #     maxForce: 0.0
+  #     minForce: 0.0
+  #   lock:
+  #     position: 0
+  #     minForce: -10
+  #     maxForce: 10
+  #   range:
+  #     maxValue: 0.0
+  #     minValue: -0.02
+  #     enabled: true
+  #     stiffness: this.prismaticStiffness
+  #     damping: this.prismaticDamping
+
+  upFingerPrismatic:
+    .type: TranslationalActuatorPrismaticConnector
+    attachment1: this.handBase.upFingerAttachment
+    attachment2: this.upFinger.inputAttachment
+    shaft: this.driveTrain.shaftUp
+    distance: this.upFingerPrismatic.range.maxValue
+    mainInteraction:
+      stiffness6D:
+        defaultValue: this.prismaticStiffness
+      damping6D:
+        defaultValue: this.prismaticDamping
+    range:
+      maxValue: 0.02
+      minValue: -0.0
+      enabled: true
+      stiffness: this.prismaticStiffness
+      damping: this.prismaticDamping
+    motor:
+      maxForce: 0.0
+      minForce: 0.0
+    
+
+  toolCollisionGroup:
+    .type: Physics.CollisionGroup
+    members:
+      - this
+  cylinderCylinderGroupPair:
+    .type: Physics.CollisionGroup.CollisionGroupPair
+    group1: this.toolCollisionGroup
+    group2: this.toolCollisionGroup
+  TcpLocation:
+    .type: Vec3
+    .value: Vec3(-0.11, 0, 0) 
+
+TwoFingerGripperAtOrigin:
+  .extends: TwoFingerGripper
+
+  worldAttachment:
+    .type: Physics.Mechanics.LockVelocityJointAttachment
+    .value: Physics.Mechanics.LockVelocityJointAttachment
+
+  worldLock:
+    .type: Physics.Mechanics.LockJointConnector
+    attachment1: this.handBase.inputAttachment
+    attachment2: this.worldAttachment

@@ -1,0 +1,11 @@
+ModuleConfig:
+  name: AIToC
+
+  import:
+    Physics: {}
+    Math:
+      autoImport: true
+    Scene: {}
+    Visual: {}
+    Simulation: {}
+

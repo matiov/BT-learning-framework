@@ -1,0 +1,136 @@
+.format: 4
+
+.import:
+  Physics: [Geometry, Component]
+  Physics.Mechanics: [RigidBody, RigidBodyAttachment]
+  Materials.PhysicalMaterials: [GraspingObjectMaterial]
+  RenderMaterials: [Black, Gray, Blue, Yellow, Green, Red]
+
+WeightLiftHandle:
+  .extends: RigidBody
+  geometry:
+    .type: Physics.Geometry.Cylinder
+    material: GraspingObjectMaterial
+    length: 0.1
+    radius: 0.1
+    renderMaterial: Black
+    localTransform:
+       position: Vec3(0, -pole.length/2, 0)
+  pole:
+    .type: Physics.Geometry.Cylinder
+    material: GraspingObjectMaterial
+    length: 0.3
+    radius: 0.01
+    renderMaterial: Gray
+  geometry1:
+    .type: Physics.Geometry.Cylinder
+    material: GraspingObjectMaterial
+    length: 0.1
+    radius: 0.1
+    renderMaterial: Black
+    localTransform:
+      position: Vec3(0,  pole.length/2, 0)
+
+GraspingStick:
+  .extends: RigidBody
+  geom:
+    .type: Physics.Geometry.Cylinder
+    material: GraspingObjectMaterial
+    radius: 0.009
+    length: 0.15
+    renderMaterial: Red
+    localTransform:
+      rotation: Quat.AngleAxis(90, Vec3(1, 0, 0))
+
+GraspingCylinder:
+  .extends: RigidBody
+  geom:
+    .type: Physics.Geometry.HollowCylinder
+    material: GraspingObjectMaterial
+    innerRadius: 0.01
+    thickness: 0.025
+    length: 0.08
+    renderMaterial: Blue
+    localTransform:
+      rotation: Quat.AngleAxis(90, Vec3(1, 0, 0))
+  # localTransform:
+  #   position: geom.length
+
+GraspingComponent:
+  .extends: Component
+  wantInternalPositioning: true
+  cylinder:
+    .type: GraspingCylinder
+    geom:
+      length: 0.04
+    localTransform: 
+      position: Vec3(0,0,0.0)
+    
+  stick:
+    .type: GraspingStick
+    localTransform:
+      position: Vec3(0,0,0.05)
+
+PoleGameBase:
+  .extends: RigidBody
+  floor:
+    .type: Geometry.Box
+    lengths: Vec3(0.3, 0.1, 0.01)
+    material: GraspingObjectMaterial
+    renderMaterial: Gray
+  pole1:
+    .type: Geometry.Cylinder
+    radius: 0.01
+    length: 0.1
+    material: GraspingObjectMaterial
+    renderMaterial: Blue
+    localTransform:
+      position: Vec3(-0.1, 0, 0.05)
+      rotation: Quat.AngleAxis(90, Vec3(1, 0, 0))
+  pole2:
+    .type: Geometry.Cylinder
+    radius: 0.01
+    length: 0.1
+    material: GraspingObjectMaterial
+    renderMaterial: Blue
+    localTransform:
+      position: Vec3(0.0, 0, 0.05)
+      rotation: Quat.AngleAxis(90, Vec3(1, 0, 0))
+  pole3:
+    .type: Geometry.Cylinder
+    material: GraspingObjectMaterial
+    radius: 0.01
+    length: 0.1
+    renderMaterial: Blue
+    localTransform:
+      position: Vec3(0.1, 0, 0.05)
+      rotation: Quat.AngleAxis(90, Vec3(1, 0, 0))
+
+Piece:
+  .extends: RigidBody
+  size:
+    .type: Real
+    .value: 0.05
+  geom:
+    .type: Geometry.HollowCylinder
+    material: GraspingObjectMaterial
+    innerRadius: 0.015
+    thickness: size
+    length: 0.02
+    renderMaterial: Green
+    localTransform:
+      rotation: Quat.AngleAxis(90, Vec3(1, 0, 0))
+
+Box:
+  .extends: Physics.Mechanics.RigidBody
+  size:
+    .type: Real
+    .value: 0.1
+  shape:
+    .type: Physics.Geometry.Box
+    lengths: Math.Vec3(this.size, this.size, this.size)
+    material: GraspingObjectMaterial
+  
+  graspAttachment:
+    .type: RigidBodyAttachment
+    .value: RigidBodyAttachment

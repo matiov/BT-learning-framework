@@ -1,0 +1,38 @@
+# The static geometry of the robot lab
+
+.format: 4
+
+
+RobotLab:
+  .extends: Physics.Component
+  externalFilepath: agx/robot_lab_2.agx
+
+  floor:
+    .type: Physics.Mechanics.RigidBody
+    externalReference: Floor_AGX
+    localTransform:
+      position: Vec3(0, 0, 0)
+  
+  floorMaterial:
+    .type: Physics.Material
+    .const: True
+    name: FloorMaterial
+    externalReference: AGX_ABB_lab_floor_material_ShapeMaterialInstance
+  
+  wallMaterial:
+    .type: Physics.Material
+    .const: True
+    name: WallMaterial
+    externalReference: AGX_ABB_lab_wall_material_ShapeMaterialInstance
+
+  tableMaterial:
+    .type: Physics.Material
+    .const: True
+    name: TableMaterial
+    externalReference: AGX_ABB_lab_table_material_ShapeMaterialInstance  
+  
+  robotCageMaterial:
+    .type: Physics.Material
+    .const: True
+    name: CageMaterial
+    externalReference: AGX_ABB_lab_cage_material_ShapeMaterialInstance
